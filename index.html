@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graficador e Inspector de Funciones Cuadráticas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbars and canvas settings */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100,116,139,0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100,116,139,0.5);
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i class="fa-solid font-bold text-white text-lg">f(x)</i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-100 leading-tight">ParabolaLab</h1>
+                    <p class="text-xs text-slate-400">Inspector Interactivo de Funciones Cuadráticas</p>
+                </div>
+            </div>
+
+            <!-- Quick Controls Toolbar -->
+            <div class="flex items-center gap-2">
+                <button id="btnResetView" title="Restablecer Vista del Plano" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-compress"></i>
+                    <span class="hidden sm:inline">Centrar Plano</span>
+                </button>
+                <button id="btnHelpModal" title="Guía Teórica" class="px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-xs font-medium text-blue-400 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span class="hidden sm:inline">Guía Teórica</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Controls & Formulations (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- Equations Card -->
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+                <h2 class="text-xs uppercase font-bold tracking-wider text-blue-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-square-root-variable"></i> Ecuación de la Función
+                </h2>
+                
+                <!-- Main Equation Display -->
+                <div class="bg-slate-950/70 rounded-xl p-4 border border-slate-800 text-center mb-4">
+                    <div id="eqStandard" class="font-mono text-xl sm:text-2xl font-bold text-white tracking-wide">
+                        f(x) = 1x² + 0x + 0
+                    </div>
+                </div>
+
+                <!-- Coeff Sliders Grid -->
+                <div class="space-y-4">
+                    <!-- Slider a -->
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="sliderA" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded bg-blue-500/20 text-blue-400 text-xs font-mono flex items-center justify-center font-bold">a</span>
+                                Coeficiente cuadrático
+                            </label>
+                            <input type="number" id="numA" step="0.1" value="1" class="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-mono text-sm text-blue-400 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <input type="range" id="sliderA" min="-10" max="10" step="0.1" value="1" class="w-full accent-blue-500 cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+                            <span>-10</span>
+                            <span>0 (Línea)</span>
+                            <span>+10</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider b -->
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="sliderB" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded bg-emerald-500/20 text-emerald-400 text-xs font-mono flex items-center justify-center font-bold">b</span>
+                                Coeficiente lineal
+                            </label>
+                            <input type="number" id="numB" step="0.1" value="0" class="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-mono text-sm text-emerald-400 focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <input type="range" id="sliderB" min="-10" max="10" step="0.1" value="0" class="w-full accent-emerald-500 cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+                            <span>-10</span>
+                            <span>0</span>
+                            <span>+10</span>
+                        </div>
+                    </div>
+
+                    <!-- Slider c -->
+                    <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="sliderC" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded bg-amber-500/20 text-amber-400 text-xs font-mono flex items-center justify-center font-bold">c</span>
+                                Término independiente
+                            </label>
+                            <input type="number" id="numC" step="0.1" value="0" class="w-20 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-right font-mono text-sm text-amber-400 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <input type="range" id="sliderC" min="-10" max="10" step="0.1" value="0" class="w-full accent-amber-500 cursor-pointer">
+                        <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+                            <span>-10</span>
+                            <span>0</span>
+                            <span>+10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Layer Toggles -->
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+                <h3 class="text-xs uppercase font-bold tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group"></i> Capas y Personalización
+                </h3>
+                
+                <div class="grid grid-cols-2 gap-3 text-xs mb-4">
+                    <label class="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900">
+                        <input type="checkbox" id="chkVertex" checked class="rounded border-slate-700 text-blue-500 focus:ring-0">
+                        <span class="text-slate-300"><i class="fa-solid fa-dot-circle text-rose-400 mr-1"></i> Vértice</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900">
+                        <input type="checkbox" id="chkRoots" checked class="rounded border-slate-700 text-blue-500 focus:ring-0">
+                        <span class="text-slate-300"><i class="fa-solid fa-slash-forward text-emerald-400 mr-1"></i> Raíces (Eje X)</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900">
+                        <input type="checkbox" id="chkYIntercept" checked class="rounded border-slate-700 text-blue-500 focus:ring-0">
+                        <span class="text-slate-300"><i class="fa-solid fa-location-dot text-amber-400 mr-1"></i> Intersección Eje Y</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900">
+                        <input type="checkbox" id="chkAxis" checked class="rounded border-slate-700 text-blue-500 focus:ring-0">
+                        <span class="text-slate-300"><i class="fa-solid fa-arrows-left-right text-purple-400 mr-1"></i> Eje Simetría</span>
+                    </label>
+                </div>
+
+                <!-- Color selector for Parabola -->
+                <div class="flex items-center justify-between pt-2 border-t border-slate-700/50">
+                    <span class="text-xs text-slate-400">Color de la Parábola:</span>
+                    <div class="flex gap-2" id="colorPickerContainer">
+                        <button class="color-btn w-6 h-6 rounded-full bg-blue-500 ring-2 ring-white ring-offset-2 ring-offset-slate-800" data-color="#3b82f6"></button>
+                        <button class="color-btn w-6 h-6 rounded-full bg-emerald-500" data-color="#10b981"></button>
+                        <button class="color-btn w-6 h-6 rounded-full bg-amber-500" data-color="#f59e0b"></button>
+                        <button class="color-btn w-6 h-6 rounded-full bg-purple-500" data-color="#a855f7"></button>
+                        <button class="color-btn w-6 h-6 rounded-full bg-rose-500" data-color="#f43f5e"></button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: Canvas Graph & Properties Dashboard (7 Cols) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- Interactive Graph Canvas Card -->
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 shadow-xl backdrop-blur-sm flex flex-col">
+                <div class="flex items-center justify-between mb-3 px-1">
+                    <h2 class="text-xs uppercase font-bold tracking-wider text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-blue-400"></i> Gráfico Interactivo
+                    </h2>
+                    <div class="text-[11px] text-slate-400 bg-slate-900/80 px-2.5 py-1 rounded-full border border-slate-700">
+                        <i class="fa-solid fa-hand-pointer mr-1"></i> Arrastra para desplazar | Rueda para Zoom
+                    </div>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 shadow-inner group">
+                    <canvas id="graphCanvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                    
+                    <!-- Zoom Overlay Controls -->
+                    <div class="absolute bottom-3 right-3 flex flex-col gap-1.5 bg-slate-900/90 backdrop-blur border border-slate-700/80 rounded-lg p-1 shadow-lg">
+                        <button id="btnZoomIn" class="w-8 h-8 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition" title="Acercar">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button id="btnZoomOut" class="w-8 h-8 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition" title="Alejar">
+                            <i class="fa-solid fa-minus"></i>
+                        </button>
+                        <button id="btnCenterCanvas" class="w-8 h-8 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition" title="Restablecer Origen">
+                            <i class="fa-solid fa-crosshairs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Coordinates Badge -->
+                    <div id="coordBadge" class="absolute top-3 left-3 bg-slate-900/90 border border-slate-700/80 rounded-md px-2.5 py-1 text-xs font-mono text-slate-300 pointer-events-none opacity-0 transition-opacity">
+                        (x: 0, y: 0)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Analytical Inspector -->
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-5 shadow-xl backdrop-blur-sm">
+                <h3 class="text-xs uppercase font-bold tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-emerald-400"></i> Análisis y Propiedades de la Función
+                </h3>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                    <!-- Discriminant -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[11px] text-slate-400 font-medium">Discriminante (Δ)</div>
+                        <div id="valDisc" class="text-base font-bold font-mono text-amber-400 mt-0.5">0</div>
+                        <div id="lblDiscType" class="text-[10px] text-slate-500 font-medium truncate">1 raíz real doble</div>
+                    </div>
+
+                    <!-- Vertex -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[11px] text-slate-400 font-medium">Vértice (h, k)</div>
+                        <div id="valVertex" class="text-base font-bold font-mono text-rose-400 mt-0.5">(0, 0)</div>
+                        <div id="lblExtremum" class="text-[10px] text-slate-500 font-medium">Mínimo global</div>
+                    </div>
+
+                    <!-- Axis of Symmetry -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[11px] text-slate-400 font-medium">Eje de Simetría</div>
+                        <div id="valAxis" class="text-base font-bold font-mono text-purple-400 mt-0.5">x = 0</div>
+                        <div class="text-[10px] text-slate-500 font-medium">Línea vertical</div>
+                    </div>
+
+                    <!-- Roots -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3 col-span-2 sm:col-span-1">
+                        <div class="text-[11px] text-slate-400 font-medium">Raíces (Ceros)</div>
+                        <div id="valRoots" class="text-sm font-bold font-mono text-emerald-400 mt-0.5 truncate">x₁ = 0, x₂ = 0</div>
+                        <div id="lblRootsStatus" class="text-[10px] text-slate-500 font-medium">Intersecciones X</div>
+                    </div>
+
+                    <!-- Intersección con el eje Y -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[11px] text-slate-400 font-medium truncate">Intersección con el eje Y</div>
+                        <div id="valYIntercept" class="text-base font-bold font-mono text-amber-400 mt-0.5">(0, 0)</div>
+                        <div class="text-[10px] text-slate-500 font-medium">Valor de f(0) = c</div>
+                    </div>
+
+                    <!-- Concavity -->
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <div class="text-[11px] text-slate-400 font-medium">Concavidad</div>
+                        <div id="valConcavity" class="text-sm font-bold font-mono text-blue-400 mt-0.5">Hacia arriba</div>
+                        <div id="lblOpening" class="text-[10px] text-slate-500 font-medium">a &gt; 0</div>
+                    </div>
+                </div>
+
+                <!-- Forms Display -->
+                <div class="space-y-2 text-xs font-mono">
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Forma Canónica:</span>
+                        <span id="eqCanonical" class="text-slate-200 font-semibold">f(x) = 1(x - 0)² + 0</span>
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex justify-between items-center">
+                        <span class="text-slate-400">Forma Factorizada:</span>
+                        <span id="eqFactorized" class="text-slate-200 font-semibold">f(x) = 1(x - 0)²</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Modal Theoretical Guide -->
+    <div id="modalGuide" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button id="btnCloseModal" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-blue-400"></i> Guía Rápida de la Función Cuadrática
+            </h2>
+
+            <div class="space-y-4 text-sm text-slate-300">
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-blue-400 mb-1">1. Forma General: f(x) = ax² + bx + c</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">
+                        - <b>'a' (Coeficiente cuadrático):</b> Determina la concavidad (hacia arriba si $a>0$, hacia abajo si $a<0$) y la apertura de los brazos.<br>
+                        - <b>'b' (Coeficiente lineal):</b> Afecta la inclinación y posición horizontal del eje de simetría.<br>
+                        - <b>'c' (Término independiente):</b> Es la <b>intersección con el eje Y</b> en $(0, c)$.
+                    </p>
+                </div>
+
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-emerald-400 mb-1">2. Vértice y Eje de Simetría</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">
+                        El vértice $(h, k)$ es el punto extremo (máximo o mínimo) de la parábola.<br>
+                        - $h = -b / (2a)$ <br>
+                        - $k = f(h) = c - b² / (4a)$ <br>
+                        El eje de simetría es la recta vertical $x = h$.
+                    </p>
+                </div>
+
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-amber-400 mb-1">3. Raíces e Intersecciones</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">
+                        - <b>Intersección con el eje X (Raíces):</b> Se obtienen con la fórmula cuadrática $x = (-b ± \sqrt{\Delta}) / (2a)$.<br>
+                        - <b>Intersección con el eje Y:</b> Es el punto $(0, c)$ donde $x = 0$.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button id="btnCloseModalBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-xl transition">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic Javascript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- State Management ---
+            const state = {
+                a: 1.0,
+                b: 0.0,
+                c: 0.0,
+                color: '#3b82f6',
+                step: 1.0,
+                showVertex: true,
+                showRoots: true,
+                showYIntercept: true,
+                showAxis: true,
+                // Canvas pan/zoom state
+                scale: 30, // Pixels per math unit
+                offsetX: 0, // Pixels offset from center
+                offsetY: 0, // Pixels offset from center
+                isDragging: false,
+                lastMouseX: 0,
+                lastMouseY: 0
+            };
+
+            // --- DOM Elements ---
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Inputs
+            const sliderA = document.getElementById('sliderA');
+            const sliderB = document.getElementById('sliderB');
+            const sliderC = document.getElementById('sliderC');
+            const numA = document.getElementById('numA');
+            const numB = document.getElementById('numB');
+            const numC = document.getElementById('numC');
+
+            // Layer Checkboxes
+            const chkVertex = document.getElementById('chkVertex');
+            const chkRoots = document.getElementById('chkRoots');
+            const chkYIntercept = document.getElementById('chkYIntercept');
+            const chkAxis = document.getElementById('chkAxis');
+
+            // Displays
+            const eqStandard = document.getElementById('eqStandard');
+            const eqCanonical = document.getElementById('eqCanonical');
+            const eqFactorized = document.getElementById('eqFactorized');
+
+            const valDisc = document.getElementById('valDisc');
+            const lblDiscType = document.getElementById('lblDiscType');
+            const valVertex = document.getElementById('valVertex');
+            const lblExtremum = document.getElementById('lblExtremum');
+            const valAxis = document.getElementById('valAxis');
+            const valRoots = document.getElementById('valRoots');
+            const lblRootsStatus = document.getElementById('lblRootsStatus');
+            const valYIntercept = document.getElementById('valYIntercept');
+            const valConcavity = document.getElementById('valConcavity');
+            const lblOpening = document.getElementById('lblOpening');
+
+            const coordBadge = document.getElementById('coordBadge');
+
+            // --- Canvas Initialization & Resizing ---
+            function resizeCanvas() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width * window.devicePixelRatio;
+                canvas.height = rect.height * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+                draw();
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+
+            // --- Synchronize Inputs & State ---
+            function updateStateFromInputs(source) {
+                if (source === 'slider') {
+                    state.a = parseFloat(sliderA.value);
+                    state.b = parseFloat(sliderB.value);
+                    state.c = parseFloat(sliderC.value);
+                    numA.value = state.a;
+                    numB.value = state.b;
+                    numC.value = state.c;
+                } else if (source === 'num') {
+                    state.a = parseFloat(numA.value) || 0;
+                    state.b = parseFloat(numB.value) || 0;
+                    state.c = parseFloat(numC.value) || 0;
+                    sliderA.value = state.a;
+                    sliderB.value = state.b;
+                    sliderC.value = state.c;
+                }
+                updateApp();
+            }
+
+            [sliderA, sliderB, sliderC].forEach(el => el.addEventListener('input', () => updateStateFromInputs('slider')));
+            [numA, numB, numC].forEach(el => el.addEventListener('input', () => updateStateFromInputs('num')));
+
+            // Checkboxes
+            chkVertex.addEventListener('change', (e) => { state.showVertex = e.target.checked; draw(); });
+            chkRoots.addEventListener('change', (e) => { state.showRoots = e.target.checked; draw(); });
+            chkYIntercept.addEventListener('change', (e) => { state.showYIntercept = e.target.checked; draw(); });
+            chkAxis.addEventListener('change', (e) => { state.showAxis = e.target.checked; draw(); });
+
+            // Colors
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('ring-2', 'ring-white', 'ring-offset-2', 'ring-offset-slate-800'));
+                    btn.classList.add('ring-2', 'ring-white', 'ring-offset-2', 'ring-offset-slate-800');
+                    state.color = btn.dataset.color;
+                    draw();
+                });
+            });
+
+            // Help Modal
+            const modal = document.getElementById('modalGuide');
+            document.getElementById('btnHelpModal').addEventListener('click', () => modal.classList.remove('hidden'));
+            document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.add('hidden'));
+            document.getElementById('btnCloseModalBtn').addEventListener('click', () => modal.classList.add('hidden'));
+
+            // --- Coordinate Conversions ---
+            function toScreenX(x) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const centerX = rect.width / 2 + state.offsetX;
+                return centerX + x * state.scale;
+            }
+
+            function toScreenY(y) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const centerY = rect.height / 2 + state.offsetY;
+                return centerY - y * state.scale;
+            }
+
+            function toMathX(px) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const centerX = rect.width / 2 + state.offsetX;
+                return (px - centerX) / state.scale;
+            }
+
+            function toMathY(py) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const centerY = rect.height / 2 + state.offsetY;
+                return (centerY - py) / state.scale;
+            }
+
+            // --- Mathematical Calculations ---
+            function calculateQuadraticProps() {
+                const { a, b, c } = state;
+                const disc = b * b - 4 * a * c;
+                const h = a !== 0 ? -b / (2 * a) : 0;
+                const k = a !== 0 ? a * h * h + b * h + c : c;
+
+                let roots = [];
+                if (a !== 0) {
+                    if (disc > 0) {
+                        const r1 = (-b + Math.sqrt(disc)) / (2 * a);
+                        const r2 = (-b - Math.sqrt(disc)) / (2 * a);
+                        roots = [r1, r2].sort((x, y) => x - y);
+                    } else if (disc === 0) {
+                        roots = [h];
+                    }
+                } else if (b !== 0) {
+                    roots = [-c / b];
+                }
+
+                return { disc, h, k, roots };
+            }
+
+            // --- Format Helpers ---
+            function formatNumber(val, decimals = 2) {
+                if (Math.abs(val) < 0.0001) return '0';
+                return Number.isInteger(val) ? val.toString() : val.toFixed(decimals);
+            }
+
+            // --- Render App & Analytics ---
+            function updateApp() {
+                const { a, b, c } = state;
+                const { disc, h, k, roots } = calculateQuadraticProps();
+
+                // 1. Standard Equation Display
+                let eqStr = 'f(x) = ';
+                if (a !== 0) {
+                    eqStr += (a === 1 ? '' : a === -1 ? '-' : formatNumber(a)) + 'x²';
+                }
+                if (b !== 0) {
+                    const sign = b > 0 ? (a !== 0 ? ' + ' : '') : ' - ';
+                    const val = Math.abs(b) === 1 ? '' : Math.abs(b);
+                    eqStr += `${sign}${val}x`;
+                }
+                if (c !== 0 || (a === 0 && b === 0)) {
+                    const sign = c > 0 ? (a !== 0 || b !== 0 ? ' + ' : '') : ' - ';
+                    eqStr += `${sign}${Math.abs(c)}`;
+                }
+                eqStandard.textContent = eqStr;
+
+                // 2. Canonical Form
+                if (a !== 0) {
+                    const hStr = h === 0 ? 'x²' : `(x ${h > 0 ? '-' : '+'} ${formatNumber(Math.abs(h))})²`;
+                    const kStr = k === 0 ? '' : ` ${k > 0 ? '+' : '-'} ${formatNumber(Math.abs(k))}`;
+                    const aStr = a === 1 ? '' : a === -1 ? '-' : `${formatNumber(a)}`;
+                    eqCanonical.textContent = `f(x) = ${aStr}${hStr}${kStr}`;
+                } else {
+                    eqCanonical.textContent = 'No aplica (Línea recta)';
+                }
+
+                // 3. Factorized Form
+                if (a !== 0) {
+                    if (disc > 0) {
+                        const r1Str = `(x ${roots[0] >= 0 ? '-' : '+'} ${formatNumber(Math.abs(roots[0]))})`;
+                        const r2Str = `(x ${roots[1] >= 0 ? '-' : '+'} ${formatNumber(Math.abs(roots[1]))})`;
+                        const aStr = a === 1 ? '' : a === -1 ? '-' : `${formatNumber(a)}`;
+                        eqFactorized.textContent = `f(x) = ${aStr}${r1Str}${r2Str}`;
+                    } else if (disc === 0) {
+                        const rStr = `(x ${roots[0] >= 0 ? '-' : '+'} ${formatNumber(Math.abs(roots[0]))})`;
+                        const aStr = a === 1 ? '' : a === -1 ? '-' : `${formatNumber(a)}`;
+                        eqFactorized.textContent = `f(x) = ${aStr}${rStr}²`;
+                    } else {
+                        eqFactorized.textContent = 'Sin factorización real (Δ < 0)';
+                    }
+                } else {
+                    eqFactorized.textContent = 'No aplica';
+                }
+
+                // 4. Mathematical Inspector Updates
+                valDisc.textContent = formatNumber(disc);
+                if (a === 0) {
+                    lblDiscType.textContent = 'Ecuación Lineal';
+                } else if (disc > 0) {
+                    lblDiscType.textContent = '2 raíces reales distintas';
+                } else if (disc === 0) {
+                    lblDiscType.textContent = '1 raíz real (doble)';
+                } else {
+                    lblDiscType.textContent = '2 raíces complejas';
+                }
+
+                if (a !== 0) {
+                    valVertex.textContent = `(${formatNumber(h)}, ${formatNumber(k)})`;
+                    lblExtremum.textContent = a > 0 ? 'Mínimo global' : 'Máximo global';
+                    valAxis.textContent = `x = ${formatNumber(h)}`;
+                } else {
+                    valVertex.textContent = 'N/A';
+                    lblExtremum.textContent = 'Sin vértice';
+                    valAxis.textContent = 'N/A';
+                }
+
+                if (a !== 0) {
+                    if (disc > 0) {
+                        valRoots.textContent = `x₁=${formatNumber(roots[0])}, x₂=${formatNumber(roots[1])}`;
+                        lblRootsStatus.textContent = 'Interseca en 2 puntos';
+                    } else if (disc === 0) {
+                        valRoots.textContent = `x = ${formatNumber(roots[0])}`;
+                        lblRootsStatus.textContent = 'Toca en 1 punto';
+                    } else {
+                        valRoots.textContent = 'Raíces Complejas';
+                        const re = formatNumber(-b / (2 * a));
+                        const im = formatNumber(Math.sqrt(-disc) / (2 * a));
+                        lblRootsStatus.textContent = `${re} ± ${im}i`;
+                    }
+                } else {
+                    valRoots.textContent = roots.length > 0 ? `x = ${formatNumber(roots[0])}` : 'Sin raíces';
+                    lblRootsStatus.textContent = roots.length > 0 ? 'Corte lineal' : 'Recta paralela';
+                }
+
+                // Updated term: Intersección con el eje Y
+                valYIntercept.textContent = `(0, ${formatNumber(c)})`;
+
+                if (a > 0) {
+                    valConcavity.textContent = 'Hacia arriba ∪';
+                    lblOpening.textContent = 'Convexo (a > 0)';
+                } else if (a < 0) {
+                    valConcavity.textContent = 'Hacia abajo ∩';
+                    lblOpening.textContent = 'Cóncavo (a < 0)';
+                } else {
+                    valConcavity.textContent = 'Sin curvatura';
+                    lblOpening.textContent = 'Línea Recta (a = 0)';
+                }
+
+                draw();
+            }
+
+            // --- Canvas Drawing Routine ---
+            function draw() {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                const width = rect.width;
+                const height = rect.height;
+
+                ctx.clearRect(0, 0, width, height);
+
+                // 1. Grid Background
+                drawGrid(width, height);
+
+                // 2. Axes
+                drawAxes(width, height);
+
+                // 3. Axis of Symmetry Layer
+                const { a, b, c } = state;
+                const { disc, h, k, roots } = calculateQuadraticProps();
+
+                if (state.showAxis && a !== 0) {
+                    const screenX = toScreenX(h);
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.setLineDash([6, 6]);
+                    ctx.strokeStyle = '#c084fc'; // Purple 400
+                    ctx.lineWidth = 1.5;
+                    ctx.moveTo(screenX, 0);
+                    ctx.lineTo(screenX, height);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 4. Parabola Curve Plot
+                ctx.save();
+                ctx.beginPath();
+                ctx.strokeStyle = state.color;
+                ctx.lineWidth = 3;
+
+                let started = false;
+                for (let px = 0; px <= width; px += 2) {
+                    const mathX = toMathX(px);
+                    const mathY = a * mathX * mathX + b * mathX + c;
+                    const py = toScreenY(mathY);
+
+                    if (py >= -500 && py <= height + 500) {
+                        if (!started) {
+                            ctx.moveTo(px, py);
+                            started = true;
+                        } else {
+                            ctx.lineTo(px, py);
+                        }
+                    } else {
+                        started = false;
+                    }
+                }
+                ctx.stroke();
+                ctx.restore();
+
+                // 5. Special Markers
+                // Intersección con el eje Y
+                if (state.showYIntercept) {
+                    drawPoint(0, c, '#f59e0b', `Intersección Eje Y (0, ${formatNumber(c)})`);
+                }
+
+                // Roots
+                if (state.showRoots && a !== 0) {
+                    if (disc > 0) {
+                        drawPoint(roots[0], 0, '#10b981', `x₁ = ${formatNumber(roots[0])}`);
+                        drawPoint(roots[1], 0, '#10b981', `x₂ = ${formatNumber(roots[1])}`);
+                    } else if (disc === 0) {
+                        drawPoint(roots[0], 0, '#10b981', `x = ${formatNumber(roots[0])}`);
+                    }
+                }
+
+                // Vertex
+                if (state.showVertex && a !== 0) {
+                    drawPoint(h, k, '#f43f5e', `Vértice (${formatNumber(h)}, ${formatNumber(k)})`);
+                }
+            }
+
+            // --- Grid Drawing Helper ---
+            function drawGrid(width, height) {
+                ctx.save();
+                ctx.strokeStyle = '#1e293b'; // Slate 800
+                ctx.lineWidth = 1;
+
+                let step = 1;
+                if (state.scale < 15) step = 5;
+                if (state.scale < 6) step = 10;
+                if (state.scale > 80) step = 0.5;
+
+                const minMathX = Math.floor(toMathX(0) / step) * step;
+                const maxMathX = Math.ceil(toMathX(width) / step) * step;
+                const minMathY = Math.floor(toMathY(height) / step) * step;
+                const maxMathY = Math.ceil(toMathY(0) / step) * step;
+
+                ctx.beginPath();
+                for (let x = minMathX; x <= maxMathX; x += step) {
+                    const sx = toScreenX(x);
+                    ctx.moveTo(sx, 0);
+                    ctx.lineTo(sx, height);
+                }
+                for (let y = minMathY; y <= maxMathY; y += step) {
+                    const sy = toScreenY(y);
+                    ctx.moveTo(0, sy);
+                    ctx.lineTo(width, sy);
+                }
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // --- Axes Drawing Helper ---
+            function drawAxes(width, height) {
+                const originX = toScreenX(0);
+                const originY = toScreenY(0);
+
+                ctx.save();
+                ctx.strokeStyle = '#64748b'; // Slate 500
+                ctx.lineWidth = 2;
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '10px Fira Code';
+
+                ctx.beginPath();
+                // X Axis
+                ctx.moveTo(0, originY);
+                ctx.lineTo(width, originY);
+                // Y Axis
+                ctx.moveTo(originX, 0);
+                ctx.lineTo(originX, height);
+                ctx.stroke();
+
+                let step = 1;
+                if (state.scale < 15) step = 5;
+                if (state.scale < 6) step = 10;
+                if (state.scale > 80) step = 0.5;
+
+                const minMathX = Math.floor(toMathX(0) / step) * step;
+                const maxMathX = Math.ceil(toMathX(width) / step) * step;
+                const minMathY = Math.floor(toMathY(height) / step) * step;
+                const maxMathY = Math.ceil(toMathY(0) / step) * step;
+
+                // X Ticks
+                for (let x = minMathX; x <= maxMathX; x += step) {
+                    if (Math.abs(x) < 0.0001) continue;
+                    const sx = toScreenX(x);
+                    ctx.beginPath();
+                    ctx.moveTo(sx, originY - 4);
+                    ctx.lineTo(sx, originY + 4);
+                    ctx.stroke();
+                    ctx.fillText(formatNumber(x, 1), sx - 8, Math.max(15, Math.min(height - 5, originY + 16)));
+                }
+
+                // Y Ticks
+                for (let y = minMathY; y <= maxMathY; y += step) {
+                    if (Math.abs(y) < 0.0001) continue;
+                    const sy = toScreenY(y);
+                    ctx.beginPath();
+                    ctx.moveTo(originX - 4, sy);
+                    ctx.lineTo(originX + 4, sy);
+                    ctx.stroke();
+                    ctx.fillText(formatNumber(y, 1), Math.max(5, Math.min(width - 25, originX + 8)), sy + 3);
+                }
+
+                // Axis Labels
+                ctx.font = 'bold 12px Inter';
+                ctx.fillText('X', width - 15, Math.max(20, originY - 8));
+                ctx.fillText('Y', Math.max(10, originX + 8), 15);
+
+                ctx.restore();
+            }
+
+            // --- Point Drawing Helper ---
+            function drawPoint(x, y, color, label) {
+                const sx = toScreenX(x);
+                const sy = toScreenY(y);
+
+                const rect = canvas.parentElement.getBoundingClientRect();
+                if (sx < -20 || sx > rect.width + 20 || sy < -20 || sy > rect.height + 20) return;
+
+                ctx.save();
+                // Outer glow
+                ctx.beginPath();
+                ctx.arc(sx, sy, 7, 0, Math.PI * 2);
+                ctx.fillStyle = color + '40';
+                ctx.fill();
+
+                // Inner circle
+                ctx.beginPath();
+                ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#0f172a';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Tooltip Label
+                if (label) {
+                    ctx.font = '500 10px Inter';
+                    const textWidth = ctx.measureText(label).width;
+                    
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                    ctx.beginPath();
+                    ctx.roundRect(sx + 8, sy - 22, textWidth + 10, 18, 4);
+                    ctx.fill();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#f8fafc';
+                    ctx.fillText(label, sx + 13, sy - 9);
+                }
+
+                ctx.restore();
+            }
+
+            // --- Canvas Pan and Zoom Controls ---
+            canvas.addEventListener('mousedown', (e) => {
+                state.isDragging = true;
+                state.lastMouseX = e.clientX;
+                state.lastMouseY = e.clientY;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                if (mouseX >= 0 && mouseX <= rect.width && mouseY >= 0 && mouseY <= rect.height) {
+                    const mx = formatNumber(toMathX(mouseX), 2);
+                    const my = formatNumber(toMathY(mouseY), 2);
+                    coordBadge.textContent = `(x: ${mx}, y: ${my})`;
+                    coordBadge.style.opacity = '1';
+                } else {
+                    coordBadge.style.opacity = '0';
+                }
+
+                if (state.isDragging) {
+                    const dx = e.clientX - state.lastMouseX;
+                    const dy = e.clientY - state.lastMouseY;
+                    state.offsetX += dx;
+                    state.offsetY += dy;
+                    state.lastMouseX = e.clientX;
+                    state.lastMouseY = e.clientY;
+                    draw();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                state.isDragging = false;
+            });
+
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+                const newScale = Math.max(5, Math.min(200, state.scale * zoomFactor));
+                
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const mathX = toMathX(mouseX);
+                const mathY = toMathY(mouseY);
+
+                state.scale = newScale;
+
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                state.offsetX = mouseX - centerX - mathX * state.scale;
+                state.offsetY = mouseY - centerY + mathY * state.scale;
+
+                draw();
+            }, { passive: false });
+
+            // Touch Support for Mobile
+            let initialTouchDist = null;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    state.isDragging = true;
+                    state.lastMouseX = e.touches[0].clientX;
+                    state.lastMouseY = e.touches[0].clientY;
+                } else if (e.touches.length === 2) {
+                    initialTouchDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && state.isDragging) {
+                    const dx = e.touches[0].clientX - state.lastMouseX;
+                    const dy = e.touches[0].clientY - state.lastMouseY;
+                    state.offsetX += dx;
+                    state.offsetY += dy;
+                    state.lastMouseX = e.touches[0].clientX;
+                    state.lastMouseY = e.touches[0].clientY;
+                    draw();
+                } else if (e.touches.length === 2 && initialTouchDist) {
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const zoomFactor = dist / initialTouchDist;
+                    state.scale = Math.max(5, Math.min(200, state.scale * zoomFactor));
+                    initialTouchDist = dist;
+                    draw();
+                }
+            });
+
+            canvas.addEventListener('touchend', () => {
+                state.isDragging = false;
+                initialTouchDist = null;
+            });
+
+            // Zoom Control Buttons
+            document.getElementById('btnZoomIn').addEventListener('click', () => {
+                state.scale = Math.min(200, state.scale * 1.25);
+                draw();
+            });
+
+            document.getElementById('btnZoomOut').addEventListener('click', () => {
+                state.scale = Math.max(5, state.scale / 1.25);
+                draw();
+            });
+
+            document.getElementById('btnCenterCanvas').addEventListener('click', () => {
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = 30;
+                draw();
+            });
+
+            document.getElementById('btnResetView').addEventListener('click', () => {
+                state.offsetX = 0;
+                state.offsetY = 0;
+                state.scale = 30;
+                draw();
+            });
+
+            // Initialize app layout and values
+            resizeCanvas();
+            updateApp();
+        });
+    </script>
+</body>
+</html>
